@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "Entities\Entiti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{1E0A73F3-F2C9-4395-BD2D-1B0B0F281BDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WepAPI", "WepAPI\WepAPI.csproj", "{782F7DD7-1198-4BD1-9816-2F3E792C595A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{1E0A73F3-F2C9-4395-BD2D-1B0B0F281BDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E0A73F3-F2C9-4395-BD2D-1B0B0F281BDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E0A73F3-F2C9-4395-BD2D-1B0B0F281BDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{782F7DD7-1198-4BD1-9816-2F3E792C595A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{782F7DD7-1198-4BD1-9816-2F3E792C595A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{782F7DD7-1198-4BD1-9816-2F3E792C595A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{782F7DD7-1198-4BD1-9816-2F3E792C595A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
