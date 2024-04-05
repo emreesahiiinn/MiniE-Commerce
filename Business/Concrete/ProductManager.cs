@@ -1,9 +1,12 @@
 using Entities.DTOs;
+using Entities.Concrete;
 using Business.Abstract;
 using Business.Constants;
-using Core.Utilities.Results;
-using Entities.Concrete;
 using DataAccess.Abstract;
+using Core.Utilities.Results;
+using Core.Aspects.Autofac.Validation;
+using Business.ValidationRules.FluentValidation;
+using Core.Utilities.Business;
 
 namespace Business.Concrete;
 
@@ -47,14 +50,39 @@ public class ProductManager : IProductService
         return new SuccessDataResult<Product>(_productDal.Get(x => x.ProductId == productId), Messages.Success);
     }
 
+    [ValidationAspect(typeof(ProductValidator))]
     public IResult Add(Product product)
     {
-        if (product.ProductName.Length < 2)
+        IResult result = BusinessRules.Run(CheckIfProductCountOfCategoryCorrect(product.CategoryId),
+            CheckIfProductNamesSame(product.ProductName));
+        if (result is not null)
         {
-            return new ErrorResult(Messages.ProductInvalidName);
+            return result;
         }
 
         _productDal.Add(product);
         return new SuccessResult(Messages.ProductAdded);
+    }
+
+    private IResult CheckIfProductCountOfCategoryCorrect(int categoryId)
+    {
+        var result = _productDal.GetAll(x => x.CategoryId == categoryId).Count;
+        if (result >= 15)
+        {
+            return new ErrorResult(Messages.Error);
+        }
+
+        return new SuccessResult(Messages.Success);
+    }
+
+    private IResult CheckIfProductNamesSame(string productName)
+    {
+        var result = _productDal.GetAll(x => x.ProductName == productName).Any();
+        if (result)
+        {
+            return new ErrorResult(Messages.Error);
+        }
+
+        return new SuccessResult(Messages.Success);
     }
 }
