@@ -1,3 +1,4 @@
+using Core.Entities.Concrete;
 using Entities.Concrete;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,4 +15,7 @@ public class MiniECommerceDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<OperationClaim> OperationClaims { get; set; }
+    public DbSet<UserOperationClaim> UserOperationClaims { get; set; }
 }

@@ -1,6 +1,7 @@
 using Entities.DTOs;
 using Entities.Concrete;
 using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Business.Constants;
 using DataAccess.Abstract;
 using Core.Utilities.Results;
@@ -45,6 +46,7 @@ public class ProductManager : IProductService
         return new SuccessDataResult<List<ProductDetailDto>>(_productDal.GetProductDetails(), Messages.Success);
     }
 
+    [SecuredOperation("admin")]
     public IDataResult<Product> GetById(int productId)
     {
         return new SuccessDataResult<Product>(_productDal.Get(x => x.ProductId == productId), Messages.Success);
