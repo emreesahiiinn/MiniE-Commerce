@@ -7,6 +7,7 @@ using DataAccess.Abstract;
 using Core.Utilities.Results;
 using Core.Aspects.Autofac.Validation;
 using Business.ValidationRules.FluentValidation;
+using Core.Entities.Abstract;
 using Core.Utilities.Business;
 
 namespace Business.Concrete;

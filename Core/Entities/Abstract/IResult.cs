@@ -1,4 +1,4 @@
-namespace Core.Utilities.Results;
+namespace Core.Entities.Abstract;
 
 public interface IResult
 {

@@ -1,3 +1,5 @@
+using Core.Entities.Abstract;
+
 namespace Core.Utilities.Results;
 
 public class DataResult<T> : Result, IDataResult<T>

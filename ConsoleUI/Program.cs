@@ -1,7 +1,6 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using Business.Concrete;
+﻿using Business.Concrete;
 using DataAccess.Concrete.EntityFramework;
+using DataAccess.Concrete.EntityFramework.EFDal;
 using DataAccess.Concrete.InMemory;
 
 namespace ConsoleUI;

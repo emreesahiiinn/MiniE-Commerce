@@ -6,7 +6,7 @@ using DataAccess.Abstract;
 using Core.Utilities.Interceptors;
 using Autofac.Extras.DynamicProxy;
 using Core.Utilities.Security.JWT;
-using DataAccess.Concrete.EntityFramework;
+using DataAccess.Concrete.EntityFramework.EFDal;
 using Microsoft.AspNetCore.Http;
 
 namespace Business.DependencyResolvers.Autofac;
@@ -18,7 +18,7 @@ public class AutofacBusinessModule : Module
         builder.RegisterType<ProductManager>().As<IProductService>().SingleInstance();
         builder.RegisterType<EfProductDal>().As<IProductDal>().SingleInstance();
 
-        builder.RegisterType<UserManager>().As<IUserService>();
+        builder.RegisterType<UserManager>().As<IUserService>().SingleInstance();
         builder.RegisterType<EfUserDal>().As<IUserDal>();
 
         builder.RegisterType<AuthManager>().As<IAuthService>();

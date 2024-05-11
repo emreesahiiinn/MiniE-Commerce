@@ -1,52 +1,74 @@
 using Autofac;
-using Core.Utilities.Security.JWT;
 using Microsoft.IdentityModel.Tokens;
-using Core.Utilities.Security.Encryption;
-using Business.DependencyResolvers.Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Business.DependencyResolvers.Autofac;
+using Core.DependencyResolvers;
+using Core.Extensions;
 using Core.Utilities.IoC;
+using Core.Utilities.Security.Encryption;
+using Core.Utilities.Security.JWT;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
-var configuration = builder.Configuration;
-var tokenOptions = configuration.GetSection("TokenOptions").Get<TokenOptions>();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+public class Program
+{
+    public static void Main(string[] args)
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidIssuer = tokenOptions.Issuer,
-            ValidAudience = tokenOptions.Audience,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
-        };
-    });
+        var host = CreateHostBuilder(args).Build();
+        host.Run();
+    }
 
-ServiceTool.Create(builder.Services);
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+            .ConfigureContainer<ContainerBuilder>(builder => { builder.RegisterModule(new AutofacBusinessModule()); })
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.ConfigureServices((context, services) =>
+                    {
+                        services.AddControllers();
+                        services.AddCors();
 
-var hostBuilder = CreateHostBuilder(args);
+                        var tokenOptions = context.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 
-var app = builder.Build();
+                        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                            .AddJwtBearer(options =>
+                            {
+                                options.TokenValidationParameters = new TokenValidationParameters()
+                                {
+                                    ValidateIssuer = true,
+                                    ValidateAudience = true,
+                                    ValidateLifetime = true,
+                                    ValidIssuer = tokenOptions.Issuer,
+                                    ValidAudience = tokenOptions.Audience,
+                                    ValidateIssuerSigningKey = true,
+                                    IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
+                                };
+                            });
 
-app.UseHttpsRedirection();
+                        services.AddDependencyResolvers(new ICoreModule[]
+                        {
+                            new CoreModule()
+                        });
+                    })
+                    .Configure(app =>
+                    {
+                        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
+                        if (env.IsDevelopment())
+                        {
+                            app.UseDeveloperExceptionPage();
+                        }
 
-app.UseRouting();
-app.UseAuthorization();
-app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                        app.UseHttpsRedirection();
 
-app.Run();
+                        app.UseRouting();
 
-IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-        .ConfigureContainer<ContainerBuilder>(builder => { builder.RegisterModule(new AutofacBusinessModule()); });
+                        app.UseAuthentication();
+
+                        app.UseAuthorization();
+
+                        app.UseCors(builder => builder.WithOrigins("http://localhost:5187").AllowAnyHeader());
+
+                        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+                    });
+            });
+}

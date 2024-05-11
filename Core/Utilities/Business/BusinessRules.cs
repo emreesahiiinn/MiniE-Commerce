@@ -1,8 +1,9 @@
+using Core.Entities.Abstract;
 using Core.Utilities.Results;
 
 namespace Core.Utilities.Business;
 
-public class BusinessRules
+public static class BusinessRules
 {
     public static IResult Run(params IResult[] logics)
     {
@@ -10,10 +11,10 @@ public class BusinessRules
         {
             if (!logic.Success)
             {
-                return logic;
+                return new ErrorResult(logic.Message);
             }
         }
 
-        return null;
+        return new SuccessResult();
     }
 }
