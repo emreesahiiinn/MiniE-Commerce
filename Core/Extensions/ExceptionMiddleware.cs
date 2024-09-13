@@ -1,24 +1,20 @@
 using System.Net;
+using Autofac.Core;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 
 namespace Core.Extensions;
 
-public class ExceptionMiddleware
+public class ExceptionMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-
-    public ExceptionMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
     public async Task InvokeAsync(HttpContext httpContext)
     {
         try
         {
-            await _next(httpContext);
+            await next(httpContext);
         }
         catch (Exception e)
         {
@@ -26,31 +22,72 @@ public class ExceptionMiddleware
         }
     }
 
-    private Task HandleExceptionAsync(HttpContext httpContext, Exception e)
+    private async Task HandleExceptionAsync(HttpContext httpContext, Exception e)
     {
         httpContext.Response.ContentType = "application/json";
-        httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
+        var statusCode = HttpStatusCode.InternalServerError;
         var message = "Internal Server Error";
-        IEnumerable<ValidationFailure> errors;
-        if (e.GetType() == typeof(ValidationException))
-        {
-            message = e.Message;
-            errors = ((ValidationException)e).Errors;
-            httpContext.Response.StatusCode = 400;
 
-            return httpContext.Response.WriteAsync(new ValidationErrorDetails
-            {
-                StatusCode = 400,
-                Message = message,
-                Errors = errors
-            }.ToString());
+        switch (e)
+        {
+            case UnauthorizedAccessException:
+                statusCode = HttpStatusCode.Unauthorized;
+                message = e.Message;
+                break;
+            case ArgumentNullException:
+                statusCode = HttpStatusCode.BadRequest;
+                message = e.Message;
+                break;
+            case ObjectDisposedException:
+                statusCode = HttpStatusCode.BadRequest;
+                message = e.Message;
+                break;
+            case ArgumentException:
+                statusCode = HttpStatusCode.BadRequest;
+                message = e.Message;
+                break;
+            case NullReferenceException:
+                statusCode = HttpStatusCode.BadRequest;
+                message = "Resource Not Found";
+                break;
+            case InvalidOperationException:
+                statusCode = HttpStatusCode.BadRequest;
+                message = e.Message;
+                break;
+            case SecurityTokenException:
+                statusCode = HttpStatusCode.Unauthorized;
+                message = e.Message;
+                break;
+            case DependencyResolutionException:
+                statusCode = HttpStatusCode.InternalServerError;
+                message = e.Message;
+                break;
+            case TimeoutException:
+                statusCode = HttpStatusCode.RequestTimeout;
+                message = "Request Timed Out";
+                break;
+            default:
+                statusCode = HttpStatusCode.InternalServerError;
+                message = e.Message;
+                break;
         }
 
-        return httpContext.Response.WriteAsync(new ErrorDetails
+        httpContext.Response.StatusCode = (int)statusCode;
+
+        var result = new ErrorDetails
         {
-            StatusCode = httpContext.Response.StatusCode,
+            Status = false,
+            StatusCode = (int)statusCode,
             Message = message
-        }.ToString());
+        };
+
+        try
+        {
+            await httpContext.Response.WriteAsync(JsonConvert.SerializeObject(result));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
     }
 }
