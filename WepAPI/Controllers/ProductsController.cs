@@ -1,6 +1,9 @@
 using Business.Abstract.Services;
+using Core.Entities.Abstract;
+using Core.Entities.Model;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
+using IResult = Core.Entities.Abstract.IResult;
 
 namespace WepAPI.Controllers;
 
@@ -10,29 +13,26 @@ public class ProductsController(IProductService productService) : Controller
 {
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IDataResult<PagedResult<Product>>> Get(int? page, int? pageSize)
     {
         var result = await productService.GetAll();
-        if (result.Status) return Ok(result.Data);
-
-        return BadRequest(result);
+        HttpContext.Items["Result"] = result;
+        return result;
     }
 
     [HttpGet("GetById")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IDataResult<Product>> Get(int id)
     {
         var result = await productService.GetById(id);
-        if (result.Status) return Ok(result.Data);
-
-        return BadRequest(result);
+        HttpContext.Items["Result"] = result;
+        return result;
     }
 
     [HttpPost("Add")]
-    public async Task<IActionResult> Post(Product product)
+    public async Task<IResult> Post(Product product)
     {
         var result = await productService.Add(product);
-        if (result.Status) return Ok(result);
-
-        return BadRequest(result);
+        HttpContext.Items["Result"] = result;
+        return result;
     }
 }

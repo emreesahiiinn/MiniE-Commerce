@@ -1,4 +1,6 @@
 using Business.Abstract.Services;
+using Core.Entities.Abstract;
+using Core.Utilities.Security.JWT;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,27 +11,18 @@ namespace WepAPI.Controllers;
 public class AuthController(IAuthService authService) : Controller
 {
     [HttpPost("Login")]
-    public async Task<ActionResult> Login(UserForLoginDto userForLoginDto)
+    public async  Task<IDataResult<AccessToken>> Login(UserForLoginDto userForLoginDto)
     {
-        var userToLogin = await authService.Login(userForLoginDto);
-        if (!userToLogin.Status) return BadRequest(userToLogin.Message);
-
-        var result = await authService.CreateAccessToken(userToLogin.Data);
-        if (!result.Status) return BadRequest(result);
-
-        return Ok(result);
+        var result = await authService.Login(userForLoginDto);
+        HttpContext.Items["Result"] = result;
+        return result;
     }
 
     [HttpPost("Register")]
-    public async Task<ActionResult> Register(UserForRegisterDto userForRegisterDto)
+    public async Task<IDataResult<AccessToken>> Register(UserForRegisterDto userForRegisterDto)
     {
-        var userExists = await authService.UserExists(userForRegisterDto.Email);
-        if (!userExists.Status) return BadRequest(userExists.Message);
-
-        var registerResult = await authService.Register(userForRegisterDto, userForRegisterDto.Password);
-        var result = await authService.CreateAccessToken(registerResult.Data);
-        if (!result.Status) return BadRequest(result);
-
-        return Ok(result);
+        var result = await authService.Register(userForRegisterDto);
+        HttpContext.Items["Result"] = result;
+        return result;
     }
 }

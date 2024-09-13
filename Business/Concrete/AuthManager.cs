@@ -2,6 +2,7 @@ using Business.Abstract.Services;
 using Business.Constants;
 using Core.Entities.Abstract;
 using Core.Entities.Concrete;
+using Core.Utilities.Business;
 using Core.Utilities.Results;
 using Core.Utilities.Security.Hashing;
 using Core.Utilities.Security.JWT;
@@ -11,10 +12,12 @@ namespace Business.Concrete;
 
 public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : IAuthService
 {
-    public async Task<IDataResult<User>> Register(UserForRegisterDto userForRegisterDto, string password)
+    public async Task<IDataResult<AccessToken>> Register(UserForRegisterDto userForRegisterDto)
     {
+        var result = BusinessRules.Run(await UserExists(userForRegisterDto.Email));
+        if (!result.Status) return new ErrorDataResult<AccessToken>(result.Message);
         byte[] passwordHash, passwordSalt;
-        HashingHelper.CreatePasswordHash(password, out passwordHash, out passwordSalt);
+        HashingHelper.CreatePasswordHash(userForRegisterDto.Password, out passwordHash, out passwordSalt);
         var user = new User
         {
             Email = userForRegisterDto.Email,
@@ -25,19 +28,21 @@ public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : I
             Status = true
         };
         await userService.Add(user);
-        return new SuccessDataResult<User>(user, Messages.UserRegistered);
+        var response = await CreateAccessToken(user);
+
+        return new SuccessDataResult<AccessToken>(response.Data, Messages.UserRegistered);
     }
 
-    public async Task<IDataResult<User>> Login(UserForLoginDto userForLoginDto)
+    public async Task<IDataResult<AccessToken>> Login(UserForLoginDto userForLoginDto)
     {
         var userToCheck = await userService.GetByMail(userForLoginDto.Email);
-        if (userToCheck == null) return new ErrorDataResult<User>(Messages.UserNotFound);
+        if (userToCheck == null) return new ErrorDataResult<AccessToken>(Messages.UserNotFound);
 
         if (!HashingHelper.VerifyPasswordHash(userForLoginDto.Password, userToCheck.PasswordHash,
                 userToCheck.PasswordSalt))
-            return new ErrorDataResult<User>(Messages.PasswordError);
-
-        return new SuccessDataResult<User>(userToCheck, Messages.SuccessfulLogin);
+            return new ErrorDataResult<AccessToken>(Messages.PasswordError);
+        var response = await CreateAccessToken(userToCheck);
+        return new SuccessDataResult<AccessToken>(response.Data, Messages.SuccessfulLogin);
     }
 
     public async Task<IResult> UserExists(string email)
