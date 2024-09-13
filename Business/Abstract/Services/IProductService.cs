@@ -9,9 +9,9 @@ namespace Business.Abstract.Services;
 public interface IProductService : IBusinessService
 {
     Task<IDataResult<PagedResult<Product>>> GetAll();
-    Task<IDataResult<PagedResult<Product>>> GetAllByCategoryId(int id);
+    Task<IDataResult<PagedResult<Product>>> GetAllByCategoryId(string id);
     Task<IDataResult<PagedResult<Product>>> GetAllByUnitPrice(decimal minPrice, decimal maxPrice);
-    Task<IDataResult<Product>> GetById(int productId);
+    Task<IDataResult<Product>> GetById(string productId);
     IDataResult<List<ProductDetailDto>> GetProductDetails();
     Task<IResult> Add(Product product);
 }

@@ -20,7 +20,7 @@ public class ProductManager(IProductDal productDal) : IProductService
         return new SuccessDataResult<PagedResult<Product>>(await productDal.GetAllAsync(), Messages.Success);
     }
 
-    public async Task<IDataResult<PagedResult<Product>>> GetAllByCategoryId(int id)
+    public async Task<IDataResult<PagedResult<Product>>> GetAllByCategoryId(string id)
     {
         return new SuccessDataResult<PagedResult<Product>>(await productDal.GetAllAsync(x => x.CategoryId == id),
             Messages.Success);
@@ -38,9 +38,9 @@ public class ProductManager(IProductDal productDal) : IProductService
     }
 
     [SecuredOperation("admin")]
-    public async Task<IDataResult<Product>> GetById(int productId)
+    public async Task<IDataResult<Product>> GetById(string productId)
     {
-        return new SuccessDataResult<Product>(await productDal.GetAsync(x => x.ProductId == productId),
+        return new SuccessDataResult<Product>(await productDal.GetAsync(x => x.Id.ToString() == productId),
             Messages.Success);
     }
 
@@ -54,7 +54,7 @@ public class ProductManager(IProductDal productDal) : IProductService
         return new SuccessResult(Messages.ProductAdded);
     }
 
-    private async Task<IResult> CheckIfProductCountOfCategoryCorrect(int categoryId)
+    private async Task<IResult> CheckIfProductCountOfCategoryCorrect(string categoryId)
     {
         var result = await productDal.GetAllAsync(x => x.CategoryId == categoryId);
         if (result.Records.Count >= 15) return new ErrorResult(Messages.Error);

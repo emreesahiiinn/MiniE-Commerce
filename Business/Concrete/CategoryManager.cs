@@ -16,9 +16,9 @@ public class CategoryManager(ICategoryDal categoryDal) : ICategoryService
         return new SuccessDataResult<PagedResult<Category>>(result, Messages.Success);
     }
 
-    public async Task<IDataResult<Category>> GetById(int categoryId)
+    public async Task<IDataResult<Category>> GetById(string categoryId)
     {
-        var result = await categoryDal.GetAsync(x => x.CategoryId == categoryId);
+        var result = await categoryDal.GetAsync(x => x.Id.ToString() == categoryId);
         return new SuccessDataResult<Category>(result, Messages.Success);
     }
 }

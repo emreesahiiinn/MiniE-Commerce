@@ -2,6 +2,7 @@ using Business.Abstract.Services;
 using Business.Constants;
 using Core.Entities.Abstract;
 using Core.Entities.Concrete;
+using Core.Entities.Enums;
 using Core.Utilities.Business;
 using Core.Utilities.Results;
 using Core.Utilities.Security.Hashing;
@@ -25,7 +26,7 @@ public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : I
             Surname = userForRegisterDto.Surname,
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
-            Status = true
+            Status = Status.Active
         };
         await userService.Add(user);
         var response = await CreateAccessToken(user);

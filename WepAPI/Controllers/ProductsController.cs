@@ -21,7 +21,7 @@ public class ProductsController(IProductService productService) : Controller
     }
 
     [HttpGet("GetById")]
-    public async Task<IDataResult<Product>> Get(int id)
+    public async Task<IDataResult<Product>> Get(string id)
     {
         var result = await productService.GetById(id);
         HttpContext.Items["Result"] = result;

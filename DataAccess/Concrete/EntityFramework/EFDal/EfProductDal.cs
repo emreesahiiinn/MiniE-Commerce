@@ -13,10 +13,10 @@ public class EfProductDal : EfEntityRepositoryBase<Product, MiniECommerceContext
         using var context = new MiniECommerceContext();
         var result = from p in context.Products
             join c in context.Categories
-                on p.CategoryId equals c.CategoryId
+                on p.CategoryId equals c.Id.ToString()
             select new ProductDetailDto
             {
-                ProductId = p.ProductId,
+                ProductId = p.Id.ToString(),
                 ProductName = p.ProductName,
                 CategoryName = c.CategoryName,
                 UnitsInStock = p.UnitsInStock
