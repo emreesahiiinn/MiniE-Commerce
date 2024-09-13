@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Core.Entities.Abstract;
+using Core.Entities.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.DataAccess.EntityFramework;
@@ -8,53 +9,85 @@ public class EfEntityRepositoryBase<TEntity, TContext> : IEntityRepository<TEnti
     where TEntity : class, IEntity, new()
     where TContext : DbContext, new()
 {
-    public List<TEntity> GetAll(Expression<Func<TEntity, bool>> filter = null)
+    public async Task<PagedResult<TEntity>> GetAllAsync(
+        Expression<Func<TEntity, bool>> filter = null,
+        int page = 1,
+        int pageSize = 10,
+        Expression<Func<TEntity, object>> orderBy = null,
+        bool orderDescending = false
+    )
     {
-        using (var context = new TContext())
+        await using var context = new TContext();
+        IQueryable<TEntity> query = context.Set<TEntity>();
+
+        if (filter != null) query = query.Where(filter);
+
+        var totalRecords = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+
+        if (orderBy != null) query = orderDescending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+
+        var records = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<TEntity>
         {
-            return filter == null
-                ? context.Set<TEntity>().ToList()
-                : context.Set<TEntity>().Where(filter).ToList();
-        }
+            Records = records,
+            Page = page,
+            TotalPages = totalPages,
+            PageSize = pageSize,
+            TotalRecords = totalRecords
+        };
     }
 
-    public TEntity Get(Expression<Func<TEntity, bool>> filter)
+    public async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, object>> orderBy = null, bool descending = false)
     {
-        using (var context = new TContext())
-        {
-            return context.Set<TEntity>().SingleOrDefault(filter);
-        }
+        await using var context = new TContext();
+        var query = context.Set<TEntity>().Where(filter);
+
+        if (orderBy != null) query = descending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
+
+        return await query.FirstOrDefaultAsync();
     }
 
-    public void Add(TEntity entity)
-    {
-        // IDisposable pattern implementation of c#
 
-        using (var context = new TContext())
-        {
-            var addedEntity = context.Entry(entity);
-            addedEntity.State = EntityState.Added;
-            context.SaveChanges();
-        }
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> filter)
+    {
+        await using var context = new TContext();
+        return await context.Set<TEntity>().AnyAsync(filter);
     }
 
-    public void Update(TEntity entity)
+    public async Task AddAsync(TEntity entity)
     {
-        using (var context = new TContext())
-        {
-            var updatedEntity = context.Entry(entity);
-            updatedEntity.State = EntityState.Modified;
-            context.SaveChanges();
-        }
+        await using var context = new TContext();
+        var addedEntity = context.Entry(entity);
+        addedEntity.State = EntityState.Added;
+        await context.SaveChangesAsync();
     }
 
-    public void Delete(TEntity entity)
+    public async Task AddRangeAsync(List<TEntity> entities)
     {
-        using (var context = new TContext())
-        {
-            var deletedEntity = context.Entry(entity);
-            deletedEntity.State = EntityState.Deleted;
-            context.SaveChanges();
-        }
+        await using var context = new TContext();
+        context.Set<TEntity>().AddRange(entities);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(TEntity entity)
+    {
+        await using var context = new TContext();
+        var updatedEntity = context.Entry(entity);
+        updatedEntity.State = EntityState.Modified;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(TEntity entity)
+    {
+        await using var context = new TContext();
+        var deletedEntity = context.Entry(entity);
+        deletedEntity.State = EntityState.Deleted;
+        await context.SaveChangesAsync();
     }
 }

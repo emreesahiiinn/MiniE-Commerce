@@ -10,27 +10,27 @@ public class ProductsController(IProductService productService) : Controller
 {
 
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var result = productService.GetAll();
+        var result = await productService.GetAll();
         if (result.Status) return Ok(result.Data);
 
         return BadRequest(result);
     }
 
     [HttpGet("GetById")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        var result = productService.GetById(id);
+        var result = await productService.GetById(id);
         if (result.Status) return Ok(result.Data);
 
         return BadRequest(result);
     }
 
     [HttpPost("Add")]
-    public IActionResult Post(Product product)
+    public async Task<IActionResult> Post(Product product)
     {
-        var result = productService.Add(product);
+        var result = await productService.Add(product);
         if (result.Status) return Ok(result);
 
         return BadRequest(result);

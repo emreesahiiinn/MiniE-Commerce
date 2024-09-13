@@ -5,5 +5,5 @@ namespace DataAccess.Abstract.Services;
 
 public interface IUserDal : IEntityRepository<User>, IDataAccessService
 {
-    List<OperationClaim> GetClaims(User user);
+    Task<List<OperationClaim>> GetClaims(User user);
 }

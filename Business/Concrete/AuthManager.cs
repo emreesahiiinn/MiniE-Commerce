@@ -11,7 +11,7 @@ namespace Business.Concrete;
 
 public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : IAuthService
 {
-    public IDataResult<User> Register(UserForRegisterDto userForRegisterDto, string password)
+    public async Task<IDataResult<User>> Register(UserForRegisterDto userForRegisterDto, string password)
     {
         byte[] passwordHash, passwordSalt;
         HashingHelper.CreatePasswordHash(password, out passwordHash, out passwordSalt);
@@ -24,13 +24,13 @@ public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : I
             PasswordSalt = passwordSalt,
             Status = true
         };
-        userService.Add(user);
+        await userService.Add(user);
         return new SuccessDataResult<User>(user, Messages.UserRegistered);
     }
 
-    public IDataResult<User> Login(UserForLoginDto userForLoginDto)
+    public async Task<IDataResult<User>> Login(UserForLoginDto userForLoginDto)
     {
-        var userToCheck = userService.GetByMail(userForLoginDto.Email);
+        var userToCheck = await userService.GetByMail(userForLoginDto.Email);
         if (userToCheck == null) return new ErrorDataResult<User>(Messages.UserNotFound);
 
         if (!HashingHelper.VerifyPasswordHash(userForLoginDto.Password, userToCheck.PasswordHash,
@@ -40,16 +40,16 @@ public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : I
         return new SuccessDataResult<User>(userToCheck, Messages.SuccessfulLogin);
     }
 
-    public IResult UserExists(string email)
+    public async Task<IResult> UserExists(string email)
     {
-        if (userService.GetByMail(email) != null) return new ErrorResult(Messages.UserAlreadyExists);
+        if (await userService.GetByMail(email) != null) return new ErrorResult(Messages.UserAlreadyExists);
 
         return new SuccessResult(Messages.Success);
     }
 
-    public IDataResult<AccessToken> CreateAccessToken(User user)
+    public async Task<IDataResult<AccessToken>> CreateAccessToken(User user)
     {
-        var claims = userService.GetClaims(user);
+        var claims = await userService.GetClaims(user);
         var accessToken = tokenHelper.CreateToken(user, claims);
         return new SuccessDataResult<AccessToken>(accessToken, Messages.AccessTokenCreated);
     }
