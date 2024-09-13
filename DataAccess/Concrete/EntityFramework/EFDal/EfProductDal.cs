@@ -1,5 +1,5 @@
 using Core.DataAccess.EntityFramework;
-using DataAccess.Abstract;
+using DataAccess.Abstract.Services;
 using DataAccess.Concrete.EntityFramework.Context;
 using Entities.Concrete;
 using Entities.DTOs;
@@ -10,19 +10,17 @@ public class EfProductDal : EfEntityRepositoryBase<Product, MiniECommerceContext
 {
     public List<ProductDetailDto> GetProductDetails()
     {
-        using (MiniECommerceContext context = new MiniECommerceContext())
-        {
-            var result = from p in context.Products
-                join c in context.Categories
-                    on p.CategoryId equals c.CategoryId
-                select new ProductDetailDto
-                {
-                    ProductId = p.ProductId,
-                    ProductName = p.ProductName,
-                    CategoryName = c.CategoryName,
-                    UnitsInStock = p.UnitsInStock,
-                };
-            return result.ToList();
-        }
+        using var context = new MiniECommerceContext();
+        var result = from p in context.Products
+            join c in context.Categories
+                on p.CategoryId equals c.CategoryId
+            select new ProductDetailDto
+            {
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+                CategoryName = c.CategoryName,
+                UnitsInStock = p.UnitsInStock
+            };
+        return result.ToList();
     }
 }

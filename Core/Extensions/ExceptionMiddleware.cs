@@ -7,7 +7,7 @@ namespace Core.Extensions;
 
 public class ExceptionMiddleware
 {
-    private RequestDelegate _next;
+    private readonly RequestDelegate _next;
 
     public ExceptionMiddleware(RequestDelegate next)
     {
@@ -31,7 +31,7 @@ public class ExceptionMiddleware
         httpContext.Response.ContentType = "application/json";
         httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
-        string message = "Internal Server Error";
+        var message = "Internal Server Error";
         IEnumerable<ValidationFailure> errors;
         if (e.GetType() == typeof(ValidationException))
         {

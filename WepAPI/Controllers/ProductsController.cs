@@ -1,6 +1,4 @@
-using Business.Abstract;
-using Business.Concrete;
-using DataAccess.Concrete.EntityFramework;
+using Business.Abstract.Services;
 using Entities.Concrete;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,23 +6,14 @@ namespace WepAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProductsController : Controller
+public class ProductsController(IProductService productService) : Controller
 {
-    private IProductService _productService;
-
-    public ProductsController(IProductService productService)
-    {
-        _productService = productService;
-    }
 
     [HttpGet]
     public IActionResult Get()
     {
-        var result = _productService.GetAll();
-        if (result.Success)
-        {
-            return Ok(result.Data);
-        }
+        var result = productService.GetAll();
+        if (result.Status) return Ok(result.Data);
 
         return BadRequest(result);
     }
@@ -32,11 +21,8 @@ public class ProductsController : Controller
     [HttpGet("GetById")]
     public IActionResult Get(int id)
     {
-        var result = _productService.GetById(id);
-        if (result.Success)
-        {
-            return Ok(result.Data);
-        }
+        var result = productService.GetById(id);
+        if (result.Status) return Ok(result.Data);
 
         return BadRequest(result);
     }
@@ -44,11 +30,8 @@ public class ProductsController : Controller
     [HttpPost("Add")]
     public IActionResult Post(Product product)
     {
-        var result = _productService.Add(product);
-        if (result.Success)
-        {
-            return Ok(result);
-        }
+        var result = productService.Add(product);
+        if (result.Status) return Ok(result);
 
         return BadRequest(result);
     }

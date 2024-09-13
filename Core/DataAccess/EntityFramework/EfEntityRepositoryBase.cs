@@ -10,7 +10,7 @@ public class EfEntityRepositoryBase<TEntity, TContext> : IEntityRepository<TEnti
 {
     public List<TEntity> GetAll(Expression<Func<TEntity, bool>> filter = null)
     {
-        using (TContext context = new TContext())
+        using (var context = new TContext())
         {
             return filter == null
                 ? context.Set<TEntity>().ToList()
@@ -20,7 +20,7 @@ public class EfEntityRepositoryBase<TEntity, TContext> : IEntityRepository<TEnti
 
     public TEntity Get(Expression<Func<TEntity, bool>> filter)
     {
-        using (TContext context = new TContext())
+        using (var context = new TContext())
         {
             return context.Set<TEntity>().SingleOrDefault(filter);
         }
@@ -30,7 +30,7 @@ public class EfEntityRepositoryBase<TEntity, TContext> : IEntityRepository<TEnti
     {
         // IDisposable pattern implementation of c#
 
-        using (TContext context = new TContext())
+        using (var context = new TContext())
         {
             var addedEntity = context.Entry(entity);
             addedEntity.State = EntityState.Added;
@@ -40,7 +40,7 @@ public class EfEntityRepositoryBase<TEntity, TContext> : IEntityRepository<TEnti
 
     public void Update(TEntity entity)
     {
-        using (TContext context = new TContext())
+        using (var context = new TContext())
         {
             var updatedEntity = context.Entry(entity);
             updatedEntity.State = EntityState.Modified;
@@ -50,7 +50,7 @@ public class EfEntityRepositoryBase<TEntity, TContext> : IEntityRepository<TEnti
 
     public void Delete(TEntity entity)
     {
-        using (TContext context = new TContext())
+        using (var context = new TContext())
         {
             var deletedEntity = context.Entry(entity);
             deletedEntity.State = EntityState.Deleted;

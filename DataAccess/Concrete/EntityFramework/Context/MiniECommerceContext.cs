@@ -15,12 +15,6 @@ public class MiniECommerceContext : DbContext
 {
     private IHttpContextAccessor? _httpContextAccessor;
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-        optionsBuilder.UseNpgsql(Configuration.PostgreSQLConnectionString);
-    }
-
 
     public DbSet<Product> Products { get; set; }
     public DbSet<Category> Categories { get; set; }
@@ -30,6 +24,12 @@ public class MiniECommerceContext : DbContext
     public DbSet<OperationClaim> OperationClaims { get; set; }
     public DbSet<UserOperationClaim> UserOperationClaims { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        optionsBuilder.UseNpgsql(Configuration.PostgreSQLConnectionString);
+    }
+
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -37,7 +37,6 @@ public class MiniECommerceContext : DbContext
         _httpContextAccessor = ServiceTool.ServiceProvider.GetService<IHttpContextAccessor>();
 
         foreach (var entry in data)
-        {
             switch (entry.State)
             {
                 case EntityState.Added:
@@ -52,7 +51,6 @@ public class MiniECommerceContext : DbContext
                     entry.Entity.UpdatedDate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
                     break;
             }
-        }
 
         return base.SaveChangesAsync(cancellationToken);
     }

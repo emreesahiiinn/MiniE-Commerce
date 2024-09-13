@@ -4,16 +4,14 @@ namespace Core.Utilities.Results;
 
 public class Result : IResult
 {
-    public bool Success { get; }
-    public string Message { get; } = null!;
-
-    protected Result(bool success, string message) : this(success)
+    public Result(bool status, string message = null, int statusCode = 200)
     {
+        Status = status;
         Message = message;
+        StatusCode = statusCode;
     }
 
-    protected Result(bool success)
-    {
-        Success = success;
-    }
+    public bool Status { get; }
+    public string Message { get; }
+    public int StatusCode { get; }
 }

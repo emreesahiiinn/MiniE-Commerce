@@ -1,11 +1,10 @@
 using Core.Entities.Abstract;
-using Core.Utilities.Results;
 using Entities.Concrete;
 using Entities.DTOs;
 
-namespace Business.Abstract;
+namespace Business.Abstract.Services;
 
-public interface IProductService
+public interface IProductService : IBusinessService
 {
     IDataResult<List<Product>> GetAll();
     IDataResult<List<Product>> GetAllByCategoryId(int id);

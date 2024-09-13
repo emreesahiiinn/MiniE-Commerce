@@ -12,7 +12,7 @@ public abstract class MethodInterception : MethodInterceptionBaseAttribute
     {
     }
 
-    protected virtual void OnException(IInvocation invocation, System.Exception e)
+    protected virtual void OnException(IInvocation invocation, Exception e)
     {
     }
 
@@ -36,10 +36,7 @@ public abstract class MethodInterception : MethodInterceptionBaseAttribute
         }
         finally
         {
-            if (isSuccess)
-            {
-                OnSuccess(invocation);
-            }
+            if (isSuccess) OnSuccess(invocation);
         }
 
         OnAfter(invocation);

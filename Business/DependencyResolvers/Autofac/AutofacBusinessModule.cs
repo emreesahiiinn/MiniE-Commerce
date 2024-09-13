@@ -1,13 +1,12 @@
+using System.Reflection;
 using Autofac;
-using Business.Abstract;
-using Business.Concrete;
-using Castle.DynamicProxy;
-using DataAccess.Abstract;
-using Core.Utilities.Interceptors;
 using Autofac.Extras.DynamicProxy;
-using Core.Utilities.Security.JWT;
-using DataAccess.Concrete.EntityFramework.EFDal;
-using Microsoft.AspNetCore.Http;
+using Business.Abstract;
+using Castle.DynamicProxy;
+using Core.Entities.Abstract;
+using Core.Utilities.Interceptors;
+using DataAccess.Abstract;
+using Module = Autofac.Module;
 
 namespace Business.DependencyResolvers.Autofac;
 
@@ -15,23 +14,33 @@ public class AutofacBusinessModule : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
-        builder.RegisterType<ProductManager>().As<IProductService>().SingleInstance();
-        builder.RegisterType<EfProductDal>().As<IProductDal>().SingleInstance();
+        var businessAssembly = Assembly.GetAssembly(typeof(IBusinessService));
+        var dataAccessAssembly = Assembly.GetAssembly(typeof(IDataAccessService));
+        var coreAssembly = Assembly.GetAssembly(typeof(ICoreService));
 
-        builder.RegisterType<UserManager>().As<IUserService>().SingleInstance();
-        builder.RegisterType<EfUserDal>().As<IUserDal>();
+        RegisterServices(builder, businessAssembly);
+        RegisterServices(builder, dataAccessAssembly);
+        RegisterServices(builder, coreAssembly);
 
-        builder.RegisterType<AuthManager>().As<IAuthService>();
-        builder.RegisterType<JwtHelper>().As<ITokenHelper>();
+        builder.RegisterAssemblyTypes(businessAssembly, dataAccessAssembly, coreAssembly)
+            .AsImplementedInterfaces()
+            .EnableInterfaceInterceptors(new ProxyGenerationOptions { Selector = new AspectInterceptorSelector() })
+            .SingleInstance();
+    }
 
-        builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>();
+    private void RegisterServices(ContainerBuilder builder, Assembly assembly)
+    {
+        var serviceTypes = assembly.GetTypes()
+            .Where(type => type.IsInterface && !type.IsGenericTypeDefinition);
 
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        foreach (var serviceType in serviceTypes)
+        {
+            var implementingTypes = assembly.GetTypes()
+                .Where(type => type.IsClass && !type.IsAbstract && serviceType.IsAssignableFrom(type));
 
-        builder.RegisterAssemblyTypes(assembly).AsImplementedInterfaces()
-            .EnableInterfaceInterceptors(new ProxyGenerationOptions()
-            {
-                Selector = new AspectInterceptorSelector()
-            }).SingleInstance();
+            foreach (var implementingType in implementingTypes)
+                if (!implementingType.IsGenericTypeDefinition)
+                    builder.RegisterType(implementingType).As(serviceType);
+        }
     }
 }

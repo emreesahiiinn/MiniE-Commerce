@@ -1,4 +1,3 @@
-
 using Microsoft.Extensions.Configuration;
 
 namespace Core.Configuration;
@@ -12,7 +11,7 @@ public static class Configuration
     {
         get
         {
-            ConfigurationManager configurationManager = new ConfigurationManager();
+            var configurationManager = new ConfigurationManager();
             configurationManager.SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), ShortPath));
             configurationManager.AddJsonFile(JsonFileName);
             return configurationManager.GetConnectionString("PostgresSQL");

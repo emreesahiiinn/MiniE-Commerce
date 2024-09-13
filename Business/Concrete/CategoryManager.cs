@@ -1,25 +1,18 @@
-using Business.Abstract;
-using DataAccess.Abstract;
+using Business.Abstract.Services;
+using DataAccess.Abstract.Services;
 using Entities.Concrete;
 
 namespace Business.Concrete;
 
-public class CategoryManager : ICategoryService
+public class CategoryManager(ICategoryDal categoryDal) : ICategoryService
 {
-    private ICategoryDal _categoryDal;
-
-    public CategoryManager(ICategoryDal categoryDal)
-    {
-        _categoryDal = categoryDal;
-    }
-
     public List<Category> GetAll()
     {
-        return _categoryDal.GetAll();
+        return categoryDal.GetAll();
     }
 
     public Category GetById(int categoryId)
     {
-        return _categoryDal.Get(x => x.CategoryId == categoryId);
+        return categoryDal.Get(x => x.CategoryId == categoryId);
     }
 }

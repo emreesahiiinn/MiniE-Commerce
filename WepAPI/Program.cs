@@ -1,74 +1,77 @@
 using Autofac;
-using Microsoft.IdentityModel.Tokens;
 using Autofac.Extensions.DependencyInjection;
 using Business.DependencyResolvers.Autofac;
+using Business.Mapping.AutoMapper;
 using Core.DependencyResolvers;
 using Core.Extensions;
-using Core.Utilities.IoC;
 using Core.Utilities.Security.Encryption;
 using Core.Utilities.Security.JWT;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Microsoft.IdentityModel.Tokens;
 
-public class Program
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
-    public static void Main(string[] args)
+    containerBuilder.RegisterModule(new AutofacBusinessModule());
+});
+
+var services = builder.Services;
+var configuration = builder.Configuration;
+
+services.AddAutoMapper(typeof(Profiles));
+
+services.AddControllers(options => { options.ModelBinderProviders.Insert(0, new ArrayModelBinderProvider()); });
+
+services.AddHttpClient();
+services.AddCors();
+
+var tokenOptions = configuration.GetSection("TokenOptions").Get<TokenOptions>();
+
+services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        var host = CreateHostBuilder(args).Build();
-        host.Run();
-    }
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidIssuer = tokenOptions.Issuer,
+            ValidAudience = tokenOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
+        };
+    });
 
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-            .ConfigureContainer<ContainerBuilder>(builder => { builder.RegisterModule(new AutofacBusinessModule()); })
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.ConfigureServices((context, services) =>
-                    {
-                        services.AddControllers();
-                        services.AddCors();
+services.AddDependencyResolvers([new CoreModule()]);
 
-                        var tokenOptions = context.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
 
-                        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                            .AddJwtBearer(options =>
-                            {
-                                options.TokenValidationParameters = new TokenValidationParameters()
-                                {
-                                    ValidateIssuer = true,
-                                    ValidateAudience = true,
-                                    ValidateLifetime = true,
-                                    ValidIssuer = tokenOptions.Issuer,
-                                    ValidAudience = tokenOptions.Audience,
-                                    ValidateIssuerSigningKey = true,
-                                    IssuerSigningKey = SecurityKeyHelper.CreateSecurityKey(tokenOptions.SecurityKey)
-                                };
-                            });
+services.AddMetrics();
 
-                        services.AddDependencyResolvers(new ICoreModule[]
-                        {
-                            new CoreModule()
-                        });
-                    })
-                    .Configure(app =>
-                    {
-                        var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
-                        if (env.IsDevelopment())
-                        {
-                            app.UseDeveloperExceptionPage();
-                        }
+var app = builder.Build();
 
-                        app.UseHttpsRedirection();
-
-                        app.UseRouting();
-
-                        app.UseAuthentication();
-
-                        app.UseAuthorization();
-
-                        app.UseCors(builder => builder.WithOrigins("http://localhost:5187").AllowAnyHeader());
-
-                        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-                    });
-            });
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseCors(builder => builder.WithOrigins("http://0.0.0.0:5187").AllowAnyHeader());
+
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+});
+
+app.Run();

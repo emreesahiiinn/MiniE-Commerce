@@ -1,5 +1,3 @@
-using Core.Utilities.Results;
-
 namespace Core.Entities.Abstract;
 
 public interface IDataResult<T> : IResult

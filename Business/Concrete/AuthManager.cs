@@ -1,4 +1,4 @@
-using Business.Abstract;
+using Business.Abstract.Services;
 using Business.Constants;
 using Core.Entities.Abstract;
 using Core.Entities.Concrete;
@@ -9,17 +9,8 @@ using Entities.DTOs;
 
 namespace Business.Concrete;
 
-public class AuthManager : IAuthService
+public class AuthManager(IUserService userService, ITokenHelper tokenHelper) : IAuthService
 {
-    private IUserService _userService;
-    private ITokenHelper _tokenHelper;
-
-    public AuthManager(IUserService userService, ITokenHelper tokenHelper)
-    {
-        _userService = userService;
-        _tokenHelper = tokenHelper;
-    }
-
     public IDataResult<User> Register(UserForRegisterDto userForRegisterDto, string password)
     {
         byte[] passwordHash, passwordSalt;
@@ -33,41 +24,33 @@ public class AuthManager : IAuthService
             PasswordSalt = passwordSalt,
             Status = true
         };
-        _userService.Add(user);
+        userService.Add(user);
         return new SuccessDataResult<User>(user, Messages.UserRegistered);
     }
 
     public IDataResult<User> Login(UserForLoginDto userForLoginDto)
     {
-        var userToCheck = _userService.GetByMail(userForLoginDto.Email);
-        if (userToCheck == null)
-        {
-            return new ErrorDataResult<User>(Messages.UserNotFound);
-        }
+        var userToCheck = userService.GetByMail(userForLoginDto.Email);
+        if (userToCheck == null) return new ErrorDataResult<User>(Messages.UserNotFound);
 
         if (!HashingHelper.VerifyPasswordHash(userForLoginDto.Password, userToCheck.PasswordHash,
                 userToCheck.PasswordSalt))
-        {
             return new ErrorDataResult<User>(Messages.PasswordError);
-        }
 
         return new SuccessDataResult<User>(userToCheck, Messages.SuccessfulLogin);
     }
 
     public IResult UserExists(string email)
     {
-        if (_userService.GetByMail(email) != null)
-        {
-            return new ErrorResult(Messages.UserAlreadyExists);
-        }
+        if (userService.GetByMail(email) != null) return new ErrorResult(Messages.UserAlreadyExists);
 
         return new SuccessResult(Messages.Success);
     }
 
     public IDataResult<AccessToken> CreateAccessToken(User user)
     {
-        var claims = _userService.GetClaims(user);
-        var accessToken = _tokenHelper.CreateToken(user, claims);
+        var claims = userService.GetClaims(user);
+        var accessToken = tokenHelper.CreateToken(user, claims);
         return new SuccessDataResult<AccessToken>(accessToken, Messages.AccessTokenCreated);
     }
 }

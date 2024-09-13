@@ -1,4 +1,4 @@
-using Business.Abstract;
+using Business.Abstract.Services;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,16 +12,10 @@ public class AuthController(IAuthService authService) : Controller
     public ActionResult Login(UserForLoginDto userForLoginDto)
     {
         var userToLogin = authService.Login(userForLoginDto);
-        if (!userToLogin.Success)
-        {
-            return BadRequest(userToLogin.Message);
-        }
+        if (!userToLogin.Status) return BadRequest(userToLogin.Message);
 
         var result = authService.CreateAccessToken(userToLogin.Data);
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
+        if (!result.Status) return BadRequest(result);
 
         return Ok(result);
     }
@@ -30,17 +24,11 @@ public class AuthController(IAuthService authService) : Controller
     public ActionResult Register(UserForRegisterDto userForRegisterDto)
     {
         var userExists = authService.UserExists(userForRegisterDto.Email);
-        if (!userExists.Success)
-        {
-            return BadRequest(userExists.Message);
-        }
+        if (!userExists.Status) return BadRequest(userExists.Message);
 
         var registerResult = authService.Register(userForRegisterDto, userForRegisterDto.Password);
         var result = authService.CreateAccessToken(registerResult.Data);
-        if (!result.Success)
-        {
-            return BadRequest(result);
-        }
+        if (!result.Status) return BadRequest(result);
 
         return Ok(result);
     }

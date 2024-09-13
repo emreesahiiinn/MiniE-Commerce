@@ -3,9 +3,9 @@ using Core.Entities.Concrete;
 using Core.Utilities.Security.JWT;
 using Entities.DTOs;
 
-namespace Business.Abstract;
+namespace Business.Abstract.Services;
 
-public interface IAuthService
+public interface IAuthService : IBusinessService
 {
     IDataResult<User> Register(UserForRegisterDto userForRegisterDto, string password);
     IDataResult<User> Login(UserForLoginDto userForLoginDto);

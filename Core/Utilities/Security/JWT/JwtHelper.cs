@@ -10,15 +10,16 @@ namespace Core.Utilities.Security.JWT;
 
 public class JwtHelper : ITokenHelper
 {
-    public IConfiguration Configuration { get; }
-    private TokenOptions _tokenOptions;
     private DateTime _accessTokenExpiration;
+    private readonly TokenOptions _tokenOptions;
 
     public JwtHelper(IConfiguration configuration)
     {
         Configuration = configuration;
         _tokenOptions = Configuration.GetSection("TokenOptions").Get<TokenOptions>();
     }
+
+    public IConfiguration Configuration { get; }
 
     public AccessToken CreateToken(User user, List<OperationClaim> operationClaims)
     {
@@ -40,8 +41,8 @@ public class JwtHelper : ITokenHelper
         SigningCredentials signingCredentials, List<OperationClaim> operationClaims)
     {
         var jwt = new JwtSecurityToken(
-            issuer: tokenOptions.Issuer,
-            audience: tokenOptions.Audience,
+            tokenOptions.Issuer,
+            tokenOptions.Audience,
             expires: _accessTokenExpiration,
             notBefore: DateTime.Now,
             claims: SetClaims(user, operationClaims),

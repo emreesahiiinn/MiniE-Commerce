@@ -1,5 +1,3 @@
-using Core.Entities.Concrete;
-
 namespace Business.Constants;
 
 public static class Messages

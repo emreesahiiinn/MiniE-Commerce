@@ -1,8 +1,8 @@
 using Core.Entities.Concrete;
 
-namespace Business.Abstract;
+namespace Business.Abstract.Services;
 
-public interface IUserService
+public interface IUserService : IBusinessService
 {
     List<OperationClaim> GetClaims(User user);
     void Add(User user);
